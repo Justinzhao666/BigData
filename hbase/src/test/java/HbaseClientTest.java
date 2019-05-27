@@ -1,10 +1,11 @@
+import curd.HbaseClient;
 import org.junit.Test;
 
 import java.io.IOException;
 
-public class HabseClientTest {
+public class HbaseClientTest {
 
-    private static HabseClient client = new HabseClient();
+    private static HbaseClient client = new HbaseClient();
 
     @Test
     public void testTableExist() throws IOException {
@@ -26,11 +27,27 @@ public class HabseClientTest {
 
     @Test
     public void testInsert() throws IOException {
-        client.insert("person", "1000", "base", "name", "justin");
+        client.insert("person", "1000", "base", "name", "justin4");
     }
 
     @Test
     public void testScanTable() throws IOException {
         client.scanTable("person");
+    }
+
+    @Test
+    public void testDeleteTable() throws Exception {
+        client.deleteTable("person");
+    }
+
+
+    @Test
+    public void testDeleteData() throws Exception {
+        client.deleteData("person", "1000", "base", "name");
+    }
+
+    @Test
+    public void testGetData() throws IOException {
+        client.getData("person", "1000", "base", "name");
     }
 }

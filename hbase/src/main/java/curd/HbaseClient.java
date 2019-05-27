@@ -1,11 +1,15 @@
+package curd;
+
+import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.*;
 import org.apache.hadoop.hbase.client.*;
 import org.apache.hadoop.hbase.util.Bytes;
 
 import java.io.IOException;
+import java.util.List;
 
-public class HabseClient {
+public class HbaseClient {
 
     private static Connection connection;
 
@@ -21,14 +25,14 @@ public class HabseClient {
     private static HBaseAdmin getOldConnectApi() throws IOException {
         // 创建配置文件
         HBaseConfiguration configuration = new HBaseConfiguration();
-        configuration.set("hbase.zookeeper.quorum", "192.168.1.200");
+        configuration.set("hbase.zookeeper.quorum", "node1");
         // 获取Hbase的管理对象
         return new HBaseAdmin(configuration);
     }
 
     private static Connection getNewConnectApi() throws IOException {
         Configuration configuration = HBaseConfiguration.create();
-        configuration.set("hbase.zookeeper.quorum", "192.168.1.200");
+        configuration.set("hbase.zookeeper.quorum", "node1");
         Connection conn = ConnectionFactory.createConnection(configuration);
         return conn;
     }
@@ -76,7 +80,20 @@ public class HabseClient {
     }
 
     /**
-     * 添加数据
+     * 删除表
+     */
+    public void deleteTable(String tName) throws Exception {
+        //删除表之前先使表不可以用
+        Admin admin = connection.getAdmin();
+        admin.disableTable(TableName.valueOf(tName));
+        admin.deleteTable(TableName.valueOf(tName));
+        System.out.println(tName + " table delete!");
+        admin.close();
+    }
+
+
+    /**
+     * 添加/修改数据
      * 这里只是增加了单个，包括列族中的列也是单个，如果多个可以循环调用，然后计数达到某个值再插入到 Hbase （生产环境可以这么做）
      * 或者封个单个方法可以添加所有的列族下的列
      */
@@ -93,6 +110,34 @@ public class HabseClient {
         table.close();
     }
 
+    /**
+     * 删除数据
+     */
+    public void deleteData(String tName, String rowKey, String cf, String cn) throws IOException {
+        // 获取table对象
+        Table table = connection.getTable(TableName.valueOf(tName));
+        // 创建delete对象
+        // 删除整个rowKey == deleteall操作
+        Delete delete = new Delete(Bytes.toBytes(rowKey));
+        if (StringUtils.isNotBlank(cf)) {
+            // 删除列族
+            delete.addFamily(Bytes.toBytes(cf));
+            if (StringUtils.isNotBlank(cn)) {
+                // 删除指定列所有版本
+                delete.addColumns(Bytes.toBytes(cf), Bytes.toBytes(cn));
+                // 删除最新版本，还可以传个版本  【该操作会先获取最新版本，然后添加一个删除标记】
+                // -- 这个慎用，他删除数据不会把数据删掉,只是标记最新那个为删除，查询的时候则会显示老版本的数据
+                // delete.addColumn(Bytes.toBytes(cf), Bytes.toBytes(cn));
+            }
+
+        }
+        table.delete(delete);
+        table.close();
+    }
+
+    /**
+     * scan表
+     */
     public void scanTable(String tName) throws IOException {
         Table table = connection.getTable(TableName.valueOf(tName));
         Scan scan = new Scan();
@@ -106,6 +151,30 @@ public class HabseClient {
                         ",Value:" + Bytes.toString(CellUtil.cloneValue(cell))
                 );
             }
+        }
+        table.close();
+    }
+
+    /**
+     *
+     */
+    public void getData(String tName, String rowKey, String cf, String cn) throws IOException {
+        Table table = connection.getTable(TableName.valueOf(tName));
+        // 创建一个get对象
+        Get get = new Get(Bytes.toBytes(rowKey));
+        get.addColumn(Bytes.toBytes(cf), Bytes.toBytes(cn));
+         get.setMaxVersions(3);
+        // 获取数据
+        Result result = table.get(get);
+        // 显示数据
+        List<Cell> cells = result.listCells();
+        for (Cell cell : cells) {
+            System.out.println("Get#RowKey:" + Bytes.toString(CellUtil.cloneRow(cell)) +
+                    ",ColFamily:" + Bytes.toString(CellUtil.cloneFamily(cell)) +
+                    ",Col:" + Bytes.toString(CellUtil.cloneQualifier(cell)) +
+                    ",Value:" + Bytes.toString(CellUtil.cloneValue(cell)) +
+                    ",Timestamp:"+ cell.getTimestamp()
+            );
         }
         table.close();
     }
