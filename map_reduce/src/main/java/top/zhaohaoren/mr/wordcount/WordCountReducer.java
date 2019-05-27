@@ -15,7 +15,7 @@ public class WordCountReducer extends Reducer<Text, IntWritable, Text, IntWritab
     private IntWritable v = new IntWritable();
 
     /**
-     * @param key
+     * @param key 这个key是什么东东？干啥的? todo:
      * @param values： 所有的map计算的结果值
      * @param context
      */

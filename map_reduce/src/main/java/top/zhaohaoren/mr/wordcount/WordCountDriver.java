@@ -33,8 +33,8 @@ public class WordCountDriver {
         job.setOutputValueClass(IntWritable.class);
 
         // 6 设置输入和输出路径
-        FileInputFormat.setInputPaths(job, new Path("/Users/zhaohaoren/workspace/code/mine/JavaProjects/BigData/map_reduce/src/main/java/top/zhaohaoren/mr/wordcount/content"));
-        FileOutputFormat.setOutputPath(job, new Path("/Users/zhaohaoren/workspace/code/mine/JavaProjects/BigData/map_reduce/src/main/java/top/zhaohaoren/mr/wordcount/output/"));
+        FileInputFormat.setInputPaths(job, new Path("map_reduce/src/main/java/top/zhaohaoren/mr/wordcount/content"));
+        FileOutputFormat.setOutputPath(job, new Path("map_reduce/src/main/java/top/zhaohaoren/mr/wordcount/output/"));
 
         // 7 提交
         // job.submit(); 不使用
