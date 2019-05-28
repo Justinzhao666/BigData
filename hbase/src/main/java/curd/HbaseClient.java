@@ -75,6 +75,10 @@ public class HbaseClient {
             tableDescriptor.addFamily(columnDescriptor);
         }
         admin.createTable(tableDescriptor);
+        // 这里在创建表的时候还可以设置其预分区规则 byte[][] splitKeys
+        // 为什么是二维数组：
+        // HBase里面数据都是Byte[]数组，我们指定的splitKeys，比如 1000,2000,3000 这里面的1000也是一个bytes数组。所以是byte[][]
+
         System.out.println(tableName + " table created!");
         admin.close();
     }
@@ -101,7 +105,7 @@ public class HbaseClient {
         // 获取到表对象
         // 需要走connection而不是admin
         Table table = connection.getTable(TableName.valueOf(tableName));
-        // 设置put对象，初始化rowkey
+        // 设置put对象，初始化row key
         Put put = new Put(Bytes.toBytes(rowKey));
         // 设置具体数据
         put.addColumn(Bytes.toBytes(cf), Bytes.toBytes(cn), Bytes.toBytes(value));

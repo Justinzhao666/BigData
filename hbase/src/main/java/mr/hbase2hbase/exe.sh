@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 # 打包
 mvn clean package -Dmaven.test.skip=true -Ptest
 # 如果没有表需要先创建表
