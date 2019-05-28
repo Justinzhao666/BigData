@@ -1,4 +1,4 @@
-package mr;
+package mr.hbase2hbase;
 
 import org.apache.hadoop.hbase.Cell;
 import org.apache.hadoop.hbase.CellUtil;

@@ -1,4 +1,4 @@
-package mr;
+package mr.hbase2hbase;
 
 import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;

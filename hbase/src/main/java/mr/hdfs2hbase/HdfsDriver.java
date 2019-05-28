@@ -3,8 +3,8 @@ package mr.hdfs2hbase;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.client.Put;
+import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.hadoop.hbase.mapreduce.TableMapReduceUtil;
-import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.util.Tool;
@@ -24,7 +24,7 @@ public class HdfsDriver extends Configuration implements Tool {
         instance.setJarByClass(HdfsDriver.class);
         //指定mapper
         instance.setMapperClass(HdfsMapper.class);
-        instance.setMapOutputKeyClass(NullWritable.class);
+        instance.setMapOutputKeyClass(ImmutableBytesWritable.class);
         instance.setMapOutputValueClass(Put.class);
         //指定reducer
 //        instance.setReducerClass(FruitReducer.class);
