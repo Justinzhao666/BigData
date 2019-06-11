@@ -6,6 +6,7 @@ import org.elasticsearch.action.get.MultiGetItemResponse;
 import org.elasticsearch.action.get.MultiGetResponse;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexResponse;
+import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.transport.TransportClient;
@@ -13,6 +14,9 @@ import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.TransportAddress;
 import org.elasticsearch.common.xcontent.XContentFactory;
 import org.elasticsearch.common.xcontent.XContentType;
+import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.search.SearchHit;
+import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.transport.client.PreBuiltTransportClient;
 import org.junit.Before;
 import org.junit.Test;
@@ -26,7 +30,25 @@ import java.util.concurrent.ExecutionException;
 
 public class ESClient {
 
+    @Data
+    class Book {
+
+        private String name;
+        private Integer page;
+        private String author;
+
+        public Book(String name, Integer page, String author) {
+            this.name = name;
+            this.page = page;
+            this.author = author;
+        }
+    }
+
     //region 创建索引数据等
+
+    /**
+     * 客户端
+     */
     private TransportClient client;
 
     /**
@@ -115,6 +137,7 @@ public class ESClient {
 
     //region 查询
 
+
     /**
      * 单个索引的查询
      */
@@ -140,6 +163,101 @@ public class ESClient {
             }
         }
 
+    }
+
+
+    /**
+     * 查询所有
+     */
+    @Test
+    public void queryMatchAll() {
+        //match all query : 将索引库里面的索引全部拿出来。
+        SearchResponse response = client.prepareSearch("book")
+                .setTypes("basic")
+                .setQuery(QueryBuilders.matchAllQuery())
+                .get();
+
+        SearchHits hits = response.getHits();
+
+        System.out.println("search result counts: " + hits.getTotalHits());
+
+        for (SearchHit hit : hits) {
+            System.out.println(hit.getSourceAsString());
+        }
+        client.close();
+    }
+
+    /**
+     * 查询字符串分词 查询针对所有的字段
+     */
+    @Test
+    public void queryString() {
+
+        SearchResponse response = client.prepareSearch("book").setTypes("basic")
+                //这里的红楼会按照默认被分词为红、楼
+                .setQuery(QueryBuilders.queryStringQuery("红楼"))
+                .get();
+        SearchHits hits = response.getHits();
+        System.out.println("search result counts: " + hits.getTotalHits());
+
+        for (SearchHit hit : hits) {
+            System.out.println(hit.getSourceAsString());
+        }
+        client.close();
+    }
+
+
+    /**
+     * 词条查询：针对某个字段查询
+     */
+    @Test
+    public void queryTerm(){
+        SearchResponse response = client.prepareSearch("book").setTypes("basic")
+                // 针对字段查询的时候就不会进行分词了
+                .setQuery(QueryBuilders.termQuery("name","红楼"))
+                .get();
+        SearchHits hits = response.getHits();
+        System.out.println("search result counts: " + hits.getTotalHits());
+
+        for (SearchHit hit : hits) {
+            System.out.println(hit.getSourceAsString());
+        }
+        client.close();
+    }
+
+
+    /**
+     * 通配符查询
+     */
+    @Test
+    public void queryWildCard(){
+        SearchResponse response = client.prepareSearch("book").setTypes("basic")
+                .setQuery(QueryBuilders.wildcardQuery("name","*红楼*"))
+                .get();
+        SearchHits hits = response.getHits();
+        System.out.println("search result counts: " + hits.getTotalHits());
+
+        for (SearchHit hit : hits) {
+            System.out.println(hit.getSourceAsString());
+        }
+        client.close();
+    }
+
+    /**
+     * 模糊查询
+     */
+    @Test
+    public void queryFuzzy(){
+        SearchResponse response = client.prepareSearch("book").setTypes("basic")
+                .setQuery(QueryBuilders.fuzzyQuery("name","lucen"))
+                .get();
+        SearchHits hits = response.getHits();
+        System.out.println("search result counts: " + hits.getTotalHits());
+
+        for (SearchHit hit : hits) {
+            System.out.println(hit.getSourceAsString());
+        }
+        client.close();
     }
     //endregion
 
@@ -201,16 +319,3 @@ public class ESClient {
 
 }
 
-@Data
-class Book {
-
-    private String name;
-    private Integer page;
-    private String author;
-
-    public Book(String name, Integer page, String author) {
-        this.name = name;
-        this.page = page;
-        this.author = author;
-    }
-}
